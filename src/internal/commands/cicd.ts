@@ -49,10 +49,10 @@ export function cicdCommand(abstract: ConnectorAbstract): Command {
 
   const deployPlan = makeDeployPlanCommand(
     "deploy-plan",
-    "plan a deploy to the npm page of the version this environment publishes",
+    "print whether this environment has a version to publish and, if so, its npm page",
     function* (input) {
       const packageJson = yield* (yield* connectorModules.Package).load();
-      return { deploy: true, url: yield* (yield* connectorModules.Release).url({ packageJson, ...input }) } as const;
+      return yield* (yield* connectorModules.Release).plan({ packageJson, ...input });
     },
   );
 

@@ -1,6 +1,5 @@
 import { Layer, pipe } from "effect";
 import { BunChildProcessSpawner, BunFileSystem, BunPath } from "@effect/platform-bun";
-import { FetchHttpClient } from "effect/http";
 import { ComponentPackageImpl } from "../modules/component-package/impl";
 import { ContractImpl } from "../modules/contract/impl";
 import { ConvexCliImpl } from "../modules/convex-cli/impl";
@@ -25,5 +24,4 @@ export const layerLive = pipe(
   Layer.provideMerge(BunChildProcessSpawner.layer),
   Layer.provideMerge(BunFileSystem.layer),
   Layer.provideMerge(BunPath.layer),
-  Layer.provideMerge(FetchHttpClient.layer),
 ) satisfies Layer.Layer<any, any, never>;

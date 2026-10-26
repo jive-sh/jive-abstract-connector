@@ -1,29 +1,31 @@
 import { Effect, FileSystem, Option, pipe } from "effect";
-import { HttpClient } from "effect/http";
 import { implementing, type EffectGen } from "effective-modules";
 import { resolve } from "node:path";
-import { ensureNpm, publishPackage, releaseDistTag, releaseVersion, type PipelineContext } from "jive-abstract-library";
-import { NPM_REGISTRY_URL, NPM_WEBSITE_URL, OUTDIR, PACKAGE_OUTDIR } from "../../common/constants";
+import { ensureNpm, planNpmRelease, publishPackage, releaseDistTag, releaseVersion, type DeployPlan, type PipelineContext } from "jive-abstract-library";
+import { OUTDIR, PACKAGE_OUTDIR } from "../../common/constants";
 import type { PackageJson } from "../../public/manifest";
 import { connectorModules } from "../index";
 import type { IRelease, ReleaseInput } from "./interface";
 
 const PROVIDER_HOSTS = { Github: "github.com", Gitlab: "gitlab.com" } as const satisfies Record<PipelineContext["provider"], string>;
 
-function registryOf(packageJson: PackageJson): string {
-  const configured = Option.flatMap(packageJson.publishConfig, (config) => Option.fromNullishOr(config["registry"]));
-  return Option.match(configured, {
-    onNone: () => NPM_REGISTRY_URL,
-    onSome: (registry) => String(registry).replace(/\/+$/, ""),
-  });
+/** The registry the package publishes to, when its manifest names one rather than using npm's configured registry. */
+function registryOf(packageJson: PackageJson): Option.Option<string> {
+  return pipe(
+    Option.flatMap(packageJson.publishConfig, (config) => Option.fromNullishOr(config["registry"])),
+    Option.map((registry) => String(registry)),
+  );
 }
 
 export class ReleaseImpl extends implementing(connectorModules.Release)
-  .uses(FileSystem.FileSystem, HttpClient.HttpClient)
+  .uses(FileSystem.FileSystem)
   implements IRelease {
-  *url({ packageJson, environment, context }: ReleaseInput): EffectGen<string, string> {
-    const version = releaseVersion(packageJson.version, environment, context.sourceCommitSha);
-    return `${NPM_WEBSITE_URL}/package/${packageJson.name}/v/${version}`;
+  *plan({ packageJson, environment, context }: ReleaseInput): EffectGen<DeployPlan, string> {
+    return yield* planNpmRelease({
+      name: packageJson.name,
+      version: releaseVersion(packageJson.version, environment, context.sourceCommitSha),
+      registry: registryOf(packageJson),
+    });
   }
 
   *publish({ packageJson, environment, context }: ReleaseInput): EffectGen<void, string> {
@@ -36,7 +38,9 @@ export class ReleaseImpl extends implementing(connectorModules.Release)
       fs.readFileString(manifestPath),
       Effect.mapError(() => `${manifestPath} is missing: the build hook writes it, and the deploy job receives it with the build's artifact`),
     );
-    yield* this.checkUnpublished(packageJson, version);
+    if (!(yield* this.plan({ packageJson, environment, context })).deploy) {
+      return yield* Effect.fail(`${packageJson.name}@${version} is already published. Bump "version" in package.json.`);
+    }
 
     const manifest = yield* Effect.try({
       try: () => JSON.parse(text) as Record<string, unknown>,
@@ -52,22 +56,8 @@ export class ReleaseImpl extends implementing(connectorModules.Release)
       Effect.mapError((e) => `Cannot write ${manifestPath}: ${e.message}`),
     );
 
-    yield* Effect.log(`Publishing ${packageJson.name}@${version} under "${distTag}" to ${registryOf(packageJson)}`);
+    yield* Effect.log(`Publishing ${packageJson.name}@${version} under "${distTag}" to ${Option.getOrElse(registryOf(packageJson), () => "npm's registry")}`);
     yield* ensureNpm();
     yield* publishPackage({ packageDir: resolve(PACKAGE_OUTDIR), outDir: resolve(OUTDIR), version, distTag });
-  }
-
-  private *checkUnpublished(packageJson: PackageJson, version: string): EffectGen<void, string> {
-    const registry = registryOf(packageJson);
-    const url = `${registry}/${packageJson.name.replace("/", "%2f")}/${encodeURIComponent(version)}`;
-    const response = yield* pipe(
-      this.getDependency(HttpClient.HttpClient).get(url),
-      Effect.mapError((e) => `Could not ask ${registry} whether ${packageJson.name}@${version} exists: ${e.message}`),
-    );
-    if (response.status === 404) return;
-    if (response.status === 200) {
-      return yield* Effect.fail(`${packageJson.name}@${version} is already published. Bump "version" in package.json.`);
-    }
-    return yield* Effect.fail(`Could not ask ${registry} whether ${packageJson.name}@${version} exists: it answered ${response.status}`);
   }
 }

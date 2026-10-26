@@ -70,7 +70,7 @@ own under `jive`: a connector's configuration is in `convex.config.ts`. Two furt
 | `get-config` | Prints the validated `jive` block. |
 | `build` | Emits `src/` with declarations into `dist/package/dist`, copies `src/` beside it, and writes the published manifest at `<version>-local`. Its `exports` are `./convex.config.js` and `./_generated/component.js` (types only), plus `.` when `src/client/index.ts` exists. An abstract with a contract also checks it here (below). |
 | `audit` | Typechecks the package; regenerates `src/component/_generated` and fails if that changed a file; packs `dist/package`, installs the tarball into a copy of `example/convex` under `dist/audit-app`, and pushes that app to a local backend. The push is where Convex bundles the component, typechecks the app's calls and checks the app passes every required variable. |
-| `deploy:plan` | Plans a deploy to the npm page of the version the environment publishes, printing e.g. `{"deploy":true,"url":"https://www.npmjs.com/package/<name>/v/1.2.0"}`. |
+| `deploy:plan` | Prints `{"deploy":false}` when the package's registry already lists the version the environment publishes (so a push without a version bump skips publishing), else a deploy to that version's npm page, e.g. `{"deploy":true,"url":"https://www.npmjs.com/package/<name>/v/1.2.0"}`. The check is jive-abstract-library's `planNpmRelease`. |
 | `upload-artifacts` | Nothing. |
 | `deploy` | Stamps the environment's version (`latest` → `X.Y.Z`, others prereleased, as `jive-abstract-library` releases) and the pipeline's repository onto the built manifest, and publishes it under the environment's dist-tag. Fails first if that version is already published. |
 

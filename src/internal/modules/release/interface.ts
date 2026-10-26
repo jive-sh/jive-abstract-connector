@@ -1,5 +1,5 @@
 import type { EffectGen } from "effective-modules";
-import type { PipelineContext } from "jive-abstract-library";
+import type { DeployPlan, PipelineContext } from "jive-abstract-library";
 import type { PackageJson } from "../../public/manifest";
 
 export interface ReleaseInput {
@@ -11,11 +11,14 @@ export interface ReleaseInput {
 
 /** Publishing the built package (`dist/package`) to its npm registry, one version per environment. */
 export interface IRelease {
-  /** The npm page of the version this environment publishes; known before anything is published. */
-  url(input: ReleaseInput): EffectGen<string, string>;
+  /**
+   * Whether this environment has a version to publish: nothing when its registry already lists the version the
+   * environment stamps, else a deploy to that version's npm page. Known before anything is published.
+   */
+  plan(input: ReleaseInput): EffectGen<DeployPlan, string>;
   /**
    * Stamps the environment's version and the repository the pipeline ran in onto the built manifest, then
-   * publishes it under the environment's dist-tag. Fails before publishing if that version already exists.
+   * publishes it under the environment's dist-tag. Fails before publishing if `plan` finds nothing to publish.
    */
   publish(input: ReleaseInput): EffectGen<void, string>;
 }

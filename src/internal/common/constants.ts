@@ -28,5 +28,3 @@ export const LOCAL_DEPLOYMENT_ENV = { CONVEX_AGENT_MODE: "anonymous" } as const;
 export const CONVEX_VERSION_RANGE = "^1.48.0";
 export const TYPESCRIPT_VERSION_RANGE = "^5.9.3";
 
-export const NPM_REGISTRY_URL = "https://registry.npmjs.org";
-export const NPM_WEBSITE_URL = "https://www.npmjs.com";
