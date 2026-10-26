@@ -1,0 +1,43 @@
+{
+  "$schema": "./package.schema.json",
+  "name": "jive-abstract-connector-fixture",
+  "version": "0.1.0",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "jive:cicd:get-config": "bun ../../src/entrypoints/jive-connector.ts cicd get-config",
+    "jive:cicd:build": "bun ../../src/entrypoints/jive-connector.ts cicd build",
+    "jive:cicd:audit": "bun ../../src/entrypoints/jive-connector.ts cicd audit",
+    "jive:cicd:deploy:url": "bun ../../src/entrypoints/jive-connector.ts cicd deploy-url",
+    "jive:cicd:upload-artifacts": "bun ../../src/entrypoints/jive-connector.ts cicd upload-artifacts",
+    "jive:cicd:deploy": "bun ../../src/entrypoints/jive-connector.ts cicd deploy",
+    "codegen": "bun ../../src/entrypoints/jive-connector.ts codegen",
+    "dev": "bun ../../src/entrypoints/jive-connector.ts dev"
+  },
+  "peerDependencies": {
+    "convex": "^1.48.0"
+  },
+  "devDependencies": {
+    "convex": "^1.48.0",
+    "typescript": "^5.9.3"
+  },
+  "jive": {
+    "cicd": {
+      "deploy": {
+        "verb": "Publish Tag",
+        "branches": {
+          "main": [
+            "latest"
+          ]
+        },
+        "previews": false,
+        "sequentially": true
+      },
+      "runsOnPullRequests": true,
+      "runsOn": "ubuntu-latest",
+      "requiredSecrets": [
+        "NPM_TOKEN"
+      ]
+    }
+  }
+}
