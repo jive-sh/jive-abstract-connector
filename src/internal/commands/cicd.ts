@@ -1,6 +1,6 @@
 import { Command } from "commander";
 import { Effect, Option, Schema } from "effect";
-import { makeCicdCommand, makeDeployCommand, makePipelineCommand } from "../common/command";
+import { makeCicdCommand, makeDeployCommand, makeDeployPlanCommand, makePipelineCommand } from "../common/command";
 import { connectorModules } from "../modules";
 import type { ConnectorAbstract } from "../public/abstract";
 import { JivePackageConfig } from "../public/manifest";
@@ -47,12 +47,12 @@ export function cicdCommand(abstract: ConnectorAbstract): Command {
     },
   );
 
-  const deployUrl = makeDeployCommand(
-    "deploy-url",
-    "print the npm page of the version this environment publishes",
+  const deployPlan = makeDeployPlanCommand(
+    "deploy-plan",
+    "plan a deploy to the npm page of the version this environment publishes",
     function* (input) {
       const packageJson = yield* (yield* connectorModules.Package).load();
-      process.stdout.write(`${yield* (yield* connectorModules.Release).url({ packageJson, ...input })}\n`);
+      return { deploy: true, url: yield* (yield* connectorModules.Release).url({ packageJson, ...input }) } as const;
     },
   );
 
@@ -74,6 +74,6 @@ export function cicdCommand(abstract: ConnectorAbstract): Command {
   );
 
   const cicd = new Command("cicd").summary("hooks invoked by Jive's reusable CI/CD pipeline");
-  [getConfig, build, audit, deployUrl, uploadArtifacts, deploy].forEach((command) => { cicd.addCommand(command); });
+  [getConfig, build, audit, deployPlan, uploadArtifacts, deploy].forEach((command) => { cicd.addCommand(command); });
   return cicd;
 }

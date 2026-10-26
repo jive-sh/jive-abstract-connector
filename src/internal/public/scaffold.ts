@@ -19,7 +19,7 @@ const HOOKS = {
   "jive:cicd:get-config": "get-config",
   "jive:cicd:build": "build",
   "jive:cicd:audit": "audit",
-  "jive:cicd:deploy:url": "deploy-url",
+  "jive:cicd:deploy:plan": "deploy-plan",
   "jive:cicd:upload-artifacts": "upload-artifacts",
   "jive:cicd:deploy": "deploy",
 } as const;

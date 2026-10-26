@@ -2,5 +2,5 @@ import { makeCicdCommandFactory, type CicdCommandFactory } from "jive-abstract-l
 import type { ConnectorModules } from "../modules";
 import { layerLive } from "./layer";
 
-export const { makeCicdCommand, makePipelineCommand, makeDeployCommand }: CicdCommandFactory<ConnectorModules> =
+export const { makeCicdCommand, makePipelineCommand, makeDeployCommand, makeDeployPlanCommand }: CicdCommandFactory<ConnectorModules> =
   makeCicdCommandFactory(layerLive);

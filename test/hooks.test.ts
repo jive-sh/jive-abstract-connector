@@ -82,11 +82,11 @@ describe("the hooks, run against test/fixture", () => {
     expect(JSON.parse(greeting.stdout)).toBe("Hello, Ada");
   }, TIMEOUT);
 
-  test("deploy:url prints the npm page of the version each environment publishes", () => {
-    const url = (environment: string) =>
-      hook("jive:cicd:deploy:url", FIXTURE_DIR, { JIVE_DEPLOY_ENVIRONMENT: environment, JIVE_PIPELINE_CONTEXT: pullRequest }).stdout;
-    expect(url("latest")).toBe("https://www.npmjs.com/package/jive-abstract-connector-fixture/v/0.1.0\n");
-    expect(url("Preview")).toBe("https://www.npmjs.com/package/jive-abstract-connector-fixture/v/0.1.0-preview-1a2b3c4d\n");
+  test("deploy:plan plans a deploy to the npm page of the version each environment publishes", () => {
+    const plan = (environment: string) =>
+      hook("jive:cicd:deploy:plan", FIXTURE_DIR, { JIVE_DEPLOY_ENVIRONMENT: environment, JIVE_PIPELINE_CONTEXT: pullRequest }).stdout;
+    expect(plan("latest")).toBe('{"deploy":true,"url":"https://www.npmjs.com/package/jive-abstract-connector-fixture/v/0.1.0"}\n');
+    expect(plan("Preview")).toBe('{"deploy":true,"url":"https://www.npmjs.com/package/jive-abstract-connector-fixture/v/0.1.0-preview-1a2b3c4d"}\n');
   });
 });
 
